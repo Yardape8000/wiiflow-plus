@@ -283,9 +283,8 @@ void CMenu::_showGameSettings(void)
 	i = min((u32)m_gcfg2.getInt(id, "hooktype", 1), ARRAY_SIZE(CMenu::_hooktype) - 1u);
 	m_btnMgr.setText(m_gameSettingsLblHooktypeVal, _t(CMenu::_hooktype[i].id, CMenu::_hooktype[i].text));
 
-	int j = EMU_DEFAULT;
-	m_gcfg2.getInt(id, "emulation", &j);
-	m_btnMgr.setText(m_gameSettingsLblEmulationVal, _t(CMenu::_Emulation[j].id, CMenu::_Emulation[j].text));
+	i = min((u32)m_gcfg2.getInt(id, "emulation", EMU_DEFAULT), ARRAY_SIZE(CMenu::_Emulation) - 1u); 
+	m_btnMgr.setText(m_gameSettingsLblEmulationVal, _t(CMenu::_Emulation[i].id, CMenu::_Emulation[i].text));
 
 	m_btnMgr.setText(m_gameSettingsLblDebuggerV, m_gcfg2.getBool(id, "debugger") ? _t("gecko", L"Gecko") : _t("def", L"Default"));
 	m_btnMgr.setText(m_gameSettingsBtnCategoryMain, _fmt("cfgg16",  L"Select").c_str());
