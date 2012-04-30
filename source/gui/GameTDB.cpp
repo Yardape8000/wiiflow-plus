@@ -485,6 +485,7 @@ bool GameTDB::FindTitle(char * data, string & title, string langCode)
 
 bool GameTDB::GetTitle(const char * id, string & title)
 {
+	title = "";
 	if(!id) return false;
 
 	char * data = GetGameNode(id);
@@ -499,6 +500,7 @@ bool GameTDB::GetTitle(const char * id, string & title)
 
 bool GameTDB::GetSynopsis(const char * id, string & synopsis)
 {
+	synopsis = "";
 	if(!id) return false;
 
 	char * data = GetGameNode(id);
@@ -531,6 +533,7 @@ bool GameTDB::GetSynopsis(const char * id, string & synopsis)
 
 bool GameTDB::GetRegion(const char * id, string & region)
 {
+	region = "";
 	if(!id) return false;
 
 	char * data = GetGameNode(id);
@@ -552,6 +555,7 @@ bool GameTDB::GetRegion(const char * id, string & region)
 
 bool GameTDB::GetDeveloper(const char * id, string & dev)
 {
+	dev = "";
 	if(!id) return false;
 
 	char * data = GetGameNode(id);
@@ -573,6 +577,7 @@ bool GameTDB::GetDeveloper(const char * id, string & dev)
 
 bool GameTDB::GetPublisher(const char * id, string & pub)
 {
+	pub = "";
 	if(!id) return false;
 
 	char * data = GetGameNode(id);
@@ -639,6 +644,7 @@ unsigned int GameTDB::GetPublishDate(const char * id)
 
 bool GameTDB::GetGenres(const char * id, string & gen)
 {
+	gen = "";
 	if(!id) return false;
 
 	char * data = GetGameNode(id);
