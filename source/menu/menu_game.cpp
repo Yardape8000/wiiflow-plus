@@ -335,11 +335,7 @@ void CMenu::_game(bool launch)
 				_showGame();
 			}
 			else
-			{
-				for(int chan = WPAD_MAX_WIIMOTES-1; chan >= 0; chan--)
-					if (m_cf.mouseOver(m_vid, m_cursor[chan].x(), m_cursor[chan].y()))
-						m_cf.flip();
-			}
+				m_cf.flip();
 		}
 		else if (BTN_HOME_PRESSED || BTN_B_PRESSED)
 			break;
