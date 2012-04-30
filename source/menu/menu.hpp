@@ -97,6 +97,7 @@ class CMenu
 		std::string m_settingsDir;
 		std::string m_languagesDir;
 		std::string m_listCacheDir;
+		std::string m_helpDir;
 		/* Updates */
 		const char* m_app_update_url;
 		const char* m_data_update_url;

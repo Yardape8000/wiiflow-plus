@@ -220,6 +220,7 @@ void CMenu::init(string)
 	m_cheatDir = m_cfg.getString("GENERAL", "dir_cheat", sfmt("%s/gct", m_txtCheatDir.c_str()));
 	m_wipDir = m_cfg.getString("GENERAL", "dir_wip", sfmt("%s/wip", m_txtCheatDir.c_str()));
 	m_listCacheDir = m_cfg.getString("GENERAL", "dir_list_cache", sfmt("%s/lists", m_cacheDir.c_str()));
+	m_helpDir = m_cfg.getString("GENERAL", "dir_help", sfmt("%s/help", m_dataDir.c_str()));
 	//
 
 	DeviceHandler::SetWatchdog(m_cfg.getUInt("GENERAL", "watchdog_timeout", 10));
@@ -281,6 +282,7 @@ void CMenu::init(string)
 	makedir((char *)m_cheatDir.c_str());
 	makedir((char *)m_wipDir.c_str());
 	makedir((char *)m_listCacheDir.c_str());
+	makedir((char *)m_helpDir.c_str());
 
 	makedir((char *)boxPicDir.c_str());
 	makedir((char *)picDir.c_str());
