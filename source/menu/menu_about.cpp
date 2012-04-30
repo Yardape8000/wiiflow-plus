@@ -126,6 +126,23 @@ void CMenu::_textAbout(void)
 	m_btnMgr.setText(m_aboutBtnSystem, _t("sys4", L"Update"));
 	m_btnMgr.setText(m_aboutLblTitle, wfmt(_fmt("appname", L"%s v%s"), APP_NAME, APP_VERSION));
 	// Add the compile date from GIT_REV here!
+
+	char * help =(char *)MEM2_alloc(4096);
+	FILE * f = fopen(sfmt("%s/%s.txt", m_helpDir.c_str(), m_curLanguage.c_str()).c_str(), "r");
+	if (f == NULL)
+		f = fopen(sfmt("%s/english.txt", m_helpDir.c_str()).c_str(), "r");
+
+	if (f == NULL)
+		strcpy(help, "ERROR: No Help File Found");
+	else
+	{
+		fread(help, 4095, 1, f);
+		help[4095] = 0;
+	}
+	SAFE_CLOSE(f);
+
+	wstringEx help_text(wfmt(_fmt("help", L"Controls:\n%s"), help));
+
 	wstringEx developers(wfmt(_fmt("about6", L"Current Developers:\n%s"), DEVELOPERS));
 	wstringEx pDevelopers(wfmt(_fmt("about7", L"Past Developers:\n%s"), PAST_DEVELOPERS));
 
@@ -140,7 +157,8 @@ void CMenu::_textAbout(void)
 	if(translator.size() > 3) thanks.append(translator);
 
 	m_btnMgr.setText(m_aboutLblInfo,
-			wfmt(L"%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s",
+			wfmt(L"%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s",
+			help_text.toUTF8().c_str(),
 			developers.toUTF8().c_str(),
 			pDevelopers.toUTF8().c_str(),
 			origLoader.toUTF8().c_str(),
@@ -150,6 +168,7 @@ void CMenu::_textAbout(void)
 			thanks.toUTF8().c_str())
 		);
 
+	SAFE_FREE(help);
 	Nand::Instance()->Disable_Emu();
 	iosinfo_t * iosInfo = cIOSInfo::GetInfo(mainIOS);
 	if(iosInfo != NULL)
