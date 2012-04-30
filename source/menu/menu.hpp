@@ -357,6 +357,18 @@ class CMenu
 		u32 m_gameSettingsBtnCategory[12];
 		u32 m_gameCategoryPage;
 		u32 m_gameSettingsPage;
+		u32 m_gameSettingsPageLast;
+		enum GameSettingsPages
+		{
+			GAME_SETTING_PAGE_NONE,
+			GAME_SETTING_PAGE_1,
+			GAME_SETTING_PAGE_2,
+			GAME_SETTING_PAGE_3,
+			GAME_SETTING_CATEGORY_PAGE_1,
+			GAME_SETTING_CATEGORY_PAGE_2,
+			GAME_SETTING_CATEGORY_PAGE_3
+		};
+		enum GameSettingsPageOffsets {GAME_SETTING_CATEGORY_PAGE_OFFSET = GAME_SETTING_CATEGORY_PAGE_1 - 1};
 	// System Menu
 		u32 m_systemBtnBack;
 		u32 m_systemLblTitle;
@@ -614,6 +626,7 @@ class CMenu
 		void _hideCheatSettings(bool instant = false);
 		void _hideError(bool instant = false);
 		void _hideMain(bool instant = false);
+		void _hideConfigCommon(bool instant = false);
 		void _hideConfig(bool instant = false);
 		void _hideConfig3(bool instant = false);
 		void _hideConfigScreen(bool instant = false);
@@ -634,6 +647,7 @@ class CMenu
 		//
 		void _showError(void);
 		void _showMain(void);
+		void _showConfigCommon(const STexture & bg, int page);
 		void _showConfig(void);
 		void _showConfig3(void);
 		void _showConfigScreen(void);
@@ -658,6 +672,7 @@ class CMenu
 		void _updateText(void);
 		//
 		void _config(int page);
+		int _configCommon(void);
 		int _config1(void);
 		int _config3(void);
 		int _configScreen(void);
@@ -672,6 +687,7 @@ class CMenu
 		void _cfTheme(void);
 		void _system(void);
 		void _gameinfo(void);
+		void _setGameSettingsPage(u32 newPage);
 		void _gameSettings(void);
 		void _CheatSettings();
 		void _CategorySettings();

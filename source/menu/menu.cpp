@@ -70,7 +70,8 @@ CMenu::CMenu(CVideo &vid) :
 	m_numCFVersions = 0;
 	m_bgCrossFade = 0;
 	m_bnrSndVol = 0;
-	m_gameSettingsPage = 0;
+	m_gameSettingsPage = GAME_SETTING_PAGE_NONE;
+	m_gameSettingsPageLast = GAME_SETTING_PAGE_NONE;
 	m_directLaunch = false;
 	m_exit = false;
 	m_initialCoverStatusComplete = false;
@@ -351,19 +352,7 @@ void CMenu::init(string)
 	m_btnMgr.init(m_vid);
 	MusicPlayer::Instance()->Init(m_cfg, m_musicDir, sfmt("%s/music", m_themeDataDir.c_str()));
 
-	_buildMenus();
-
 	m_locked = m_cfg.getString("GENERAL", "parent_code").size() >= 4;
-	m_btnMgr.setRumble(CONF_GetPadMotorMode() != 0);
-
-	int exit_to = m_cfg.getInt("GENERAL", "exit_to");
-	m_disable_exit = exit_to == EXIT_TO_DISABLE;
-
-	if(exit_to == EXIT_TO_BOOTMII && (!DeviceHandler::Instance()->IsInserted(SD) ||
-	stat(sfmt("%s:/bootmii/armboot.bin",DeviceName[SD]).c_str(), &dummy) != 0 ||
-	stat(sfmt("%s:/bootmii/ppcboot.elf", DeviceName[SD]).c_str(), &dummy) != 0))
-		exit_to = EXIT_TO_HBC;
-	Sys_ExitTo(exit_to);
 
 	LWP_MutexInit(&m_mutex, 0);
 
@@ -375,6 +364,19 @@ void CMenu::init(string)
 		m_favorites = m_cfg.getBool(domain, "favorites");
 	m_category = m_cat.getInt(domain, "category");
 	m_max_categories = m_cat.getInt(domain, "numcategories", 12);
+
+	_buildMenus();
+
+	m_btnMgr.setRumble(CONF_GetPadMotorMode() != 0);
+
+	int exit_to = m_cfg.getInt("GENERAL", "exit_to");
+	m_disable_exit = exit_to == EXIT_TO_DISABLE;
+
+	if(exit_to == EXIT_TO_BOOTMII && (!DeviceHandler::Instance()->IsInserted(SD) ||
+	stat(sfmt("%s:/bootmii/armboot.bin",DeviceName[SD]).c_str(), &dummy) != 0 ||
+	stat(sfmt("%s:/bootmii/ppcboot.elf", DeviceName[SD]).c_str(), &dummy) != 0))
+		exit_to = EXIT_TO_HBC;
+	Sys_ExitTo(exit_to);
 
 	vector<string> gamercards = stringToVector(m_cfg.getString("GAMERCARD", "gamercards"), "|");
 	if(gamercards.size() == 0)

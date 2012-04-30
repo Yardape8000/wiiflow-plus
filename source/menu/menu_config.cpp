@@ -52,14 +52,19 @@ void CMenu::SwitchPartition(bool direction, bool showLabel)
 	}
 }
 
-void CMenu::_hideConfig(bool instant)
+void CMenu::_hideConfigCommon(bool instant)
 {
 	m_btnMgr.hide(m_configLblTitle, instant);
 	m_btnMgr.hide(m_configBtnBack, instant);
 	m_btnMgr.hide(m_configLblPage, instant);
 	m_btnMgr.hide(m_configBtnPageM, instant);
 	m_btnMgr.hide(m_configBtnPageP, instant);
-	m_btnMgr.hide(m_configBtnBack, instant);
+}
+
+void CMenu::_hideConfig(bool instant)
+{
+	_hideConfigCommon(instant);
+
 	m_btnMgr.hide(m_configLblPartitionName, instant);
 	m_btnMgr.hide(m_configLblPartition, instant);
 	m_btnMgr.hide(m_configBtnPartitionP, instant);
@@ -78,11 +83,21 @@ void CMenu::_hideConfig(bool instant)
 			m_btnMgr.hide(m_configLblUser[i], instant);
 }
 
-void CMenu::_showConfig(void)
+void CMenu::_showConfigCommon(const STexture & bg, int page)
 {
-	_setBg(m_configBg, m_configBg);
+	_setBg(bg, bg);
 	m_btnMgr.show(m_configLblTitle);
 	m_btnMgr.show(m_configBtnBack);
+	m_btnMgr.show(m_configLblPage);
+	m_btnMgr.show(m_configBtnPageM);
+	m_btnMgr.show(m_configBtnPageP);
+	m_btnMgr.setText(m_configLblPage, wfmt(L"%i / %i", page, m_locked ? page : _nbCfgPages));
+}
+
+void CMenu::_showConfig(void)
+{
+	_showConfigCommon(m_configBg, g_curPage);
+
 	if(!m_locked)
 	{
 		m_btnMgr.show(m_configLblPartitionName);
@@ -91,76 +106,106 @@ void CMenu::_showConfig(void)
 		m_btnMgr.show(m_configBtnPartitionM);
 		m_btnMgr.show(m_configLblDownload);
 		m_btnMgr.show(m_configBtnDownload);
+
+		int emu_mode = EMU_DISABLED;
+		m_cfg.getInt("NAND", "emulation", &emu_mode);
+		bool enabled = (m_current_view == COVERFLOW_CHANNEL && emu_mode) || m_current_view != COVERFLOW_CHANNEL;
+		char *partitionname = enabled ? (char *)DeviceName[m_cfg.getInt(_domainFromView(), "partition", currentPartition)] : (char *)"NAND";
+
+		for(u8 i = 0; strncmp((const char *)&partitionname[i], "\0", 1) != 0; i++)
+			partitionname[i] = toupper(partitionname[i]);
+
+		for (u32 i = 0; i < ARRAY_SIZE(m_configLblUser); ++i)
+			if (m_configLblUser[i] != -1u)
+				m_btnMgr.show(m_configLblUser[i]);
+
+		m_btnMgr.setText(m_configLblPartition, (string)partitionname);
+
+		if (m_current_view == COVERFLOW_CHANNEL || m_current_view == COVERFLOW_USB)
+		{
+			int i = EMU_DISABLED;
+			m_cfg.getInt(_domainFromView(), "emulation", &i);
+			m_btnMgr.setText(m_configLblEmulationVal, _t(CMenu::_Emulation[i].id, CMenu::_Emulation[i].text));
+			m_btnMgr.setText(m_configLblEmulation, _t("cfg11", L"Emulation"));
+
+			m_btnMgr.show(m_configLblEmulation);
+			m_btnMgr.show(m_configLblEmulationVal);
+			m_btnMgr.show(m_configBtnEmulationP);
+			m_btnMgr.show(m_configBtnEmulationM);
+		}
 	}
 	m_btnMgr.show(m_configLblParental);
-	m_btnMgr.show(m_configLblPage);
-	m_btnMgr.show(m_configBtnPageM);
-	m_btnMgr.show(m_configBtnPageP);
-
 	m_btnMgr.show(m_locked ? m_configBtnUnlock : m_configBtnSetCode);
-
-	int emu_mode = EMU_DISABLED;
-	m_cfg.getInt("NAND", "emulation", &emu_mode);
-	bool enabled = (m_current_view == COVERFLOW_CHANNEL && emu_mode) || m_current_view != COVERFLOW_CHANNEL;
-	char *partitionname = enabled ? (char *)DeviceName[m_cfg.getInt(_domainFromView(), "partition", currentPartition)] : (char *)"NAND";
-
-	for(u8 i = 0; strncmp((const char *)&partitionname[i], "\0", 1) != 0; i++)
-		partitionname[i] = toupper(partitionname[i]);
-
-	for (u32 i = 0; i < ARRAY_SIZE(m_configLblUser); ++i)
-		if (m_configLblUser[i] != -1u)
-			m_btnMgr.show(m_configLblUser[i]);
-
-	m_btnMgr.setText(m_configLblPartition, (string)partitionname);
-	m_btnMgr.setText(m_configLblPage, wfmt(L"%i / %i", g_curPage, m_locked ? g_curPage : CMenu::_nbCfgPages));
-
-	if ((m_current_view == COVERFLOW_CHANNEL || m_current_view == COVERFLOW_USB) && !m_locked)
-	{
-		int i = EMU_DISABLED;
-		m_cfg.getInt(_domainFromView(), "emulation", &i);
-		m_btnMgr.setText(m_configLblEmulationVal, _t(CMenu::_Emulation[i].id, CMenu::_Emulation[i].text));
-		m_btnMgr.setText(m_configLblEmulation, _t("cfg11", L"Emulation"));
-
-		m_btnMgr.show(m_configLblEmulation);
-		m_btnMgr.show(m_configLblEmulationVal);
-		m_btnMgr.show(m_configBtnEmulationP);
-		m_btnMgr.show(m_configBtnEmulationM);
-	}
 }
 
 void CMenu::_config(int page)
 {
 	m_curGameId = m_cf.getId();
 	m_cf.clear();
-	while (page > 0 && page <= CMenu::_nbCfgPages)
+	int change = 0;		// 0=no change; 1=inc page; -1=dec page; 2=back out
+	while (1)
+	{
 		switch (page)
 		{
 			case 1:
-				page = _config1();
+				change = _config1();
 				break;
 			case 2:
-				page = _configAdv();
+				change = _configAdv();
 				break;
 			case 3:
-				page = _config3();
+				change = _config3();
 				break;
 			case 4:
-				page = _config4();
+				change = _config4();
 				break;
 			case 5:
-				page = _configSnd();
+				change = _configSnd();
 				break;
 			case 6:
-				page = _configScreen();
+				change = _configScreen();
 				break;
 		}
+		if (change == 2)
+			break;
+		if (!m_locked)
+		{
+			page += change;
+			if (page > _nbCfgPages)
+				page = 1;
+			else if (page < 0)
+				page = _nbCfgPages;
+		}
+	}
 	m_cfg.save();
 	_initCF();
 }
 
+int CMenu::_configCommon(void)
+{
+	_mainLoopCommon();
+	if (BTN_HOME_PRESSED || BTN_B_PRESSED || (BTN_A_PRESSED && m_btnMgr.selected(m_configBtnBack)))
+		return 2;
+	else if (BTN_UP_PRESSED)
+		m_btnMgr.up();
+	else if (BTN_DOWN_PRESSED)
+		m_btnMgr.down();
+	else if (BTN_LEFT_PRESSED || BTN_MINUS_PRESSED || (BTN_A_PRESSED && m_btnMgr.selected(m_configBtnPageM)))
+	{
+		if(BTN_LEFT_PRESSED || BTN_MINUS_PRESSED) m_btnMgr.click(m_configBtnPageM);
+		return -1;
+	}
+	else if (BTN_RIGHT_PRESSED || BTN_PLUS_PRESSED || (BTN_A_PRESSED && m_btnMgr.selected(m_configBtnPageP)))
+	{
+		if(BTN_RIGHT_PRESSED || BTN_PLUS_PRESSED) m_btnMgr.click(m_configBtnPageP);
+		return 1;
+	}
+	return 0;
+}
+
 int CMenu::_config1(void)
 {
-	int nextPage = 0;
+	int change = 0;
 	SetupInput();
 
 	s32 bCurrentPartition = currentPartition;
@@ -170,32 +215,12 @@ int CMenu::_config1(void)
 	_showConfig();
 	while (true)
 	{
-		_mainLoopCommon();
-		if (BTN_HOME_PRESSED || BTN_B_PRESSED)
+		change = _configCommon();
+		if (change != 0)
 			break;
-		else if (BTN_UP_PRESSED)
-			m_btnMgr.up();
-		else if (BTN_DOWN_PRESSED)
-			m_btnMgr.down();
-		if (BTN_LEFT_PRESSED || BTN_MINUS_PRESSED || (BTN_A_PRESSED && m_btnMgr.selected(m_configBtnPageM)))
-		{
-			nextPage = m_locked ? 1 : loopNum(g_curPage - 1, CMenu::_nbCfgPages + 1);
-			if(nextPage <= 0) nextPage = CMenu::_nbCfgPages;
-			if(BTN_LEFT_PRESSED || BTN_MINUS_PRESSED) m_btnMgr.click(m_configBtnPageM);
-			break;
-		}
-		if (BTN_RIGHT_PRESSED || BTN_PLUS_PRESSED || (BTN_A_PRESSED && m_btnMgr.selected(m_configBtnPageP)))
-		{
-			nextPage = m_locked ? 1 : loopNum(g_curPage + 1, CMenu::_nbCfgPages + 1);
-			if(nextPage <= 0) nextPage = 1;
-			if(BTN_RIGHT_PRESSED || BTN_PLUS_PRESSED) m_btnMgr.click(m_configBtnPageP);
-			break;
-		}
 		if (BTN_A_PRESSED)
 		{
-			if (m_btnMgr.selected(m_configBtnBack))
-				break;
-			else if (m_btnMgr.selected(m_configBtnDownload))
+			if (m_btnMgr.selected(m_configBtnDownload))
 			{
 				m_cf.stopCoverLoader(true);
 				_hideConfig();
@@ -224,12 +249,12 @@ int CMenu::_config1(void)
 				}
 				_showConfig();
 			}
-			else if (!m_locked && (m_btnMgr.selected(m_configBtnPartitionP) || m_btnMgr.selected(m_configBtnPartitionM)))
+			else if (m_btnMgr.selected(m_configBtnPartitionP) || m_btnMgr.selected(m_configBtnPartitionM))
 			{
 				SwitchPartition(m_btnMgr.selected(m_configBtnPartitionP));
 				_showConfig();
 			}
-			else if (!m_locked && (m_btnMgr.selected(m_configBtnEmulationP) || m_btnMgr.selected(m_configBtnEmulationM)))
+			else if (m_btnMgr.selected(m_configBtnEmulationP) || m_btnMgr.selected(m_configBtnEmulationM))
 			{
 				s8 direction = m_btnMgr.selected(m_configBtnEmulationP) ? 1 : -1;
 				int value = (int)loopNum((u32)m_cfg.getInt(_domainFromView(), "emulation", EMU_DISABLED) + direction, ARRAY_SIZE(CMenu::_Emulation) - 1u);
@@ -254,7 +279,7 @@ int CMenu::_config1(void)
 
 	_hideConfig();
 
-	return nextPage;
+	return change;
 }
 
 void CMenu::_initConfigMenu(CMenu::SThemeData &theme)

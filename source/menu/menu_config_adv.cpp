@@ -19,12 +19,8 @@ template <class T> static inline T loopNum(T i, T s)
 
 void CMenu::_hideConfigAdv(bool instant)
 {
-	m_btnMgr.hide(m_configLblTitle, instant);
-	m_btnMgr.hide(m_configBtnBack, instant);
-	m_btnMgr.hide(m_configLblPage, instant);
-	m_btnMgr.hide(m_configBtnPageM, instant);
-	m_btnMgr.hide(m_configBtnPageP, instant);
-	//
+	_hideConfigCommon(instant);
+
 	m_btnMgr.hide(m_configAdvLblInstall, instant);
 	m_btnMgr.hide(m_configAdvBtnInstall, instant);
 	m_btnMgr.hide(m_configAdvLblTheme, instant);
@@ -44,13 +40,8 @@ void CMenu::_hideConfigAdv(bool instant)
 
 void CMenu::_showConfigAdv(void)
 {
-	_setBg(m_configAdvBg, m_configAdvBg);
-	m_btnMgr.show(m_configLblTitle);
-	m_btnMgr.show(m_configBtnBack);
-	m_btnMgr.show(m_configLblPage);
-	m_btnMgr.show(m_configBtnPageM);
-	m_btnMgr.show(m_configBtnPageP);
-	//
+	_showConfigCommon(m_configAdvBg, g_curPage);
+
 	m_btnMgr.show(m_configAdvLblCurTheme);
 	m_btnMgr.show(m_configAdvBtnCurThemeM);
 	m_btnMgr.show(m_configAdvBtnCurThemeP);
@@ -69,8 +60,7 @@ void CMenu::_showConfigAdv(void)
 	for (u32 i = 0; i < ARRAY_SIZE(m_configAdvLblUser); ++i)
 		if (m_configAdvLblUser[i] != -1u)
 			m_btnMgr.show(m_configAdvLblUser[i]);
-	//
-	m_btnMgr.setText(m_configLblPage, wfmt(L"%i / %i", g_curPage, m_locked ? g_curPage : CMenu::_nbCfgPages));
+
 	m_btnMgr.setText(m_configAdvLblCurLanguage, m_curLanguage);
 	m_btnMgr.setText(m_configAdvLblCurTheme, m_cfg.getString("GENERAL", "theme"));
 }
@@ -103,7 +93,7 @@ static void listThemes(const char * path, vector<string> &themes)
 
 int CMenu::_configAdv(void)
 {
-	int nextPage = 0;
+	int change = 0;
 	vector<string> themes;
 	string prevTheme = m_cfg.getString("GENERAL", "theme");
 
@@ -120,39 +110,16 @@ int CMenu::_configAdv(void)
 	_showConfigAdv();
 	while (true)
 	{
-		_mainLoopCommon();
-		if (BTN_HOME_PRESSED || BTN_B_PRESSED)
+		change = _configCommon();
+		if (change != 0)
 			break;
-		else if (BTN_UP_PRESSED)
-			m_btnMgr.up();
-		else if (BTN_DOWN_PRESSED)
-			m_btnMgr.down();
-		if (BTN_LEFT_PRESSED || BTN_MINUS_PRESSED || (BTN_A_PRESSED && m_btnMgr.selected(m_configBtnPageM)))
-		{
-			nextPage = m_locked ? 1 : loopNum(g_curPage - 1, CMenu::_nbCfgPages + 1);
-			if(nextPage <= 0) nextPage = CMenu::_nbCfgPages;
-			if(BTN_LEFT_PRESSED || BTN_MINUS_PRESSED) m_btnMgr.click(m_configBtnPageM);
-			break;
-		}
-		if (BTN_RIGHT_PRESSED || BTN_PLUS_PRESSED || (BTN_A_PRESSED && m_btnMgr.selected(m_configBtnPageP)))
-		{
-			nextPage = m_locked ? 1 : loopNum(g_curPage + 1, CMenu::_nbCfgPages + 1);
-			if(nextPage <= 0) nextPage = 1;
-			if(BTN_RIGHT_PRESSED || BTN_PLUS_PRESSED) m_btnMgr.click(m_configBtnPageP);
-			break;
-		}
 		if (BTN_A_PRESSED)
 		{
-			if (m_btnMgr.selected(m_configBtnBack))
-				break;
-			else if (m_btnMgr.selected(m_configAdvBtnInstall))
+			if (m_btnMgr.selected(m_configAdvBtnInstall))
 			{
-				if (!m_locked)
-				{
-					_hideConfigAdv();
-					_wbfsOp(CMenu::WO_ADD_GAME);
-					_showConfigAdv();
-				}
+				_hideConfigAdv();
+				_wbfsOp(CMenu::WO_ADD_GAME);
+				_showConfigAdv();
 			}
 			else if (m_btnMgr.selected(m_configAdvBtnCurThemeP) || m_btnMgr.selected(m_configAdvBtnCurThemeM))
 			{
@@ -206,7 +173,7 @@ int CMenu::_configAdv(void)
 	}
 	lang_changed = false;
 
-	return nextPage;
+	return change;
 }
 
 void CMenu::_initConfigAdvMenu(CMenu::SThemeData &theme)

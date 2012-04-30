@@ -23,12 +23,8 @@ const CMenu::SOption CMenu::_exitTo[5] = {
 
 void CMenu::_hideConfig4(bool instant)
 {
-	m_btnMgr.hide(m_configLblTitle, instant);
-	m_btnMgr.hide(m_configBtnBack, instant);
-	m_btnMgr.hide(m_configLblPage, instant);
-	m_btnMgr.hide(m_configBtnPageM, instant);
-	m_btnMgr.hide(m_configBtnPageP, instant);
-	//
+	_hideConfigCommon(instant);
+
 	m_btnMgr.hide(m_config4LblHome, instant);
 	m_btnMgr.hide(m_config4BtnHome, instant);
 	m_btnMgr.hide(m_config4LblSaveFavMode, instant);
@@ -46,13 +42,8 @@ void CMenu::_hideConfig4(bool instant)
 
 void CMenu::_showConfig4(void)
 {
-	_setBg(m_config4Bg, m_config4Bg);
-	m_btnMgr.show(m_configLblTitle);
-	m_btnMgr.show(m_configBtnBack);
-	m_btnMgr.show(m_configLblPage);
-	m_btnMgr.show(m_configBtnPageM);
-	m_btnMgr.show(m_configBtnPageP);
-	//
+	_showConfigCommon(m_config4Bg, g_curPage);
+
 	m_btnMgr.show(m_config4LblHome);
 	m_btnMgr.show(m_config4BtnHome);
 	m_btnMgr.show(m_config4LblSaveFavMode);
@@ -68,9 +59,7 @@ void CMenu::_showConfig4(void)
 		if (m_config4LblUser[i] != -1u)
 			m_btnMgr.show(m_config4LblUser[i]);
 
-	m_btnMgr.setText(m_configLblPage, wfmt(L"%i / %i", g_curPage, m_locked ? g_curPage : CMenu::_nbCfgPages));
-	int i;
-	i = min(max(0, m_cfg.getInt("GENERAL", "exit_to")), (int)ARRAY_SIZE(CMenu::_exitTo) - 1);
+	int i = min(max(0, m_cfg.getInt("GENERAL", "exit_to")), (int)ARRAY_SIZE(CMenu::_exitTo) - 1);
 	m_btnMgr.setText(m_config4BtnHome, _t(CMenu::_exitTo[i].id, CMenu::_exitTo[i].text));
 	m_btnMgr.setText(m_config4BtnSaveFavMode, m_cfg.getBool("GENERAL", "favorites_on_startup") ? _t("on", L"On") : _t("off", L"Off"));
 	m_btnMgr.setText(m_config4BtnCategoryOnBoot, m_cat.getBool("GENERAL", "category_on_start") ? _t("on", L"On") : _t("off", L"Off"));
@@ -108,37 +97,17 @@ void CMenu::_showConfig4(void)
 
 int CMenu::_config4(void)
 {
-	int nextPage = 0;
+	int change = 0;
 
 	_showConfig4();
 	while (true)
 	{
-		_mainLoopCommon();
-		if (BTN_HOME_PRESSED || BTN_B_PRESSED)
+		change = _configCommon();
+		if (change != 0)
 			break;
-		else if (BTN_UP_PRESSED)
-			m_btnMgr.up();
-		else if (BTN_DOWN_PRESSED)
-			m_btnMgr.down();
-		if (BTN_LEFT_PRESSED || BTN_MINUS_PRESSED || (BTN_A_PRESSED && m_btnMgr.selected(m_configBtnPageM)))
-		{
-			nextPage = m_locked ? 1 : loopNum(g_curPage - 1, CMenu::_nbCfgPages + 1);
-			if(nextPage <= 0) nextPage = CMenu::_nbCfgPages;
-			if(BTN_LEFT_PRESSED || BTN_MINUS_PRESSED) m_btnMgr.click(m_configBtnPageM);
-			break;
-		}
-		if (BTN_RIGHT_PRESSED || BTN_PLUS_PRESSED || (BTN_A_PRESSED && m_btnMgr.selected(m_configBtnPageP)))
-		{
-			nextPage = m_locked ? 1 : loopNum(g_curPage + 1, CMenu::_nbCfgPages + 1);
-			if(nextPage <= 0) nextPage = 1;
-			if(BTN_RIGHT_PRESSED || BTN_PLUS_PRESSED) m_btnMgr.click(m_configBtnPageP);
-			break;
-		}
 		if (BTN_A_PRESSED)
 		{
-			if (m_btnMgr.selected(m_configBtnBack))
-				break;
-			else if (m_btnMgr.selected(m_config4BtnHome))
+			if (m_btnMgr.selected(m_config4BtnHome))
 			{
 				int exit_to = (int)loopNum((u32)m_cfg.getInt("GENERAL", "exit_to") + 1, ARRAY_SIZE(CMenu::_exitTo));
 				m_cfg.setInt("GENERAL", "exit_to", exit_to);
@@ -178,7 +147,7 @@ int CMenu::_config4(void)
 		}
 	}
 	_hideConfig4();
-	return nextPage;
+	return change;
 }
 
 void CMenu::_initConfig4Menu(CMenu::SThemeData &theme)
