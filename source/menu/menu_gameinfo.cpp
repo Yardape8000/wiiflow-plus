@@ -40,6 +40,8 @@ extern const u8		drums_png[];
 extern const u8		drumsR_png[];
 extern const u8		motionplus_png[];
 extern const u8		motionplusR_png[];
+extern const u8		udraw_png[];
+extern const u8		udrawR_png[];
 extern const u8		wheel_png[];
 extern const u8		zapper_png[];
 extern const u8		wiispeak_png[];
@@ -425,6 +427,7 @@ void CMenu::_textGameInfo(void)
 			wheel = 0,
 			keyboard = 0,
 			zapper = 0,
+			udraw = 0,
 			x = 0;
 
 		//check required controlls
@@ -448,6 +451,8 @@ void CMenu::_textGameInfo(void)
 				microphone = 1;
 			else if (strcmp((acc_itr->Name).c_str(), "balanceboard") == 0)
 				balanceboard = 1;
+			else if (strcmp((acc_itr->Name).c_str(), "udraw") == 0)
+				udraw = 1;
 			else if (strcmp((acc_itr->Name).c_str(), "keyboard") == 0)
 				keyboard = 1;
 		}
@@ -522,6 +527,12 @@ void CMenu::_textGameInfo(void)
 			m_btnMgr.setTexture(m_gameinfoLblControlsReq[x] ,m_controlsreq[x], 52, 60);
 			x++;
 		}
+		if(udraw && x < max_controlsReq)
+		{
+			m_controlsreq[x].fromPNG(udrawR_png);
+			m_btnMgr.setTexture(m_gameinfoLblControlsReq[x] ,m_controlsreq[x], 52, 60);
+			x++;
+		}
 
 		cnt_controlsreq = x;
 
@@ -542,6 +553,7 @@ void CMenu::_textGameInfo(void)
 		wheel = 0,
 		keyboard = 0,
 		zapper = 0,
+		udraw = 0,
 		x = 0;
 
 		for (vector<Accessory>::iterator acc_itr = gameinfo.Accessories.begin(); acc_itr != gameinfo.Accessories.end(); acc_itr++)
@@ -572,6 +584,8 @@ void CMenu::_textGameInfo(void)
 				wheel = 1;
 			else if (strcmp((acc_itr->Name).c_str(), "keyboard") == 0)
 				keyboard = 1;
+			else if (strcmp((acc_itr->Name).c_str(), "udraw") == 0)
+				udraw = 1;
  		}
 
 		x = 0;
@@ -640,6 +654,12 @@ void CMenu::_textGameInfo(void)
 		if(keyboard && x < max_controls)
 		{
 			m_controls[x].fromPNG(keyboard_png);
+			m_btnMgr.setTexture(m_gameinfoLblControls[x] ,m_controls[x], 52, 60);
+			x++;
+		}
+		if(udraw && x < max_controls)
+		{
+			m_controls[x].fromPNG(udraw_png);
 			m_btnMgr.setTexture(m_gameinfoLblControls[x] ,m_controls[x], 52, 60);
 			x++;
 		}
