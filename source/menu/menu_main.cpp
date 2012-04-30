@@ -139,6 +139,9 @@ int CMenu::main(void)
 	string prevTheme = m_cfg.getString("GENERAL", "theme", "default");
 	bool use_grab = m_cfg.getBool("GENERAL", "use_grab");
 	show_homebrew = !m_cfg.getBool("HOMEBREW", "disable");
+	bool use_NAND = !m_cfg.getBool("NAND", "disable");
+	if (!use_NAND)
+		m_cfg.remove("NAND", "emulation");
 
 	m_reload = false;
 	static u32 disc_check = 0;
@@ -315,7 +318,7 @@ int CMenu::main(void)
 				_initCF();
 			}
 			//Events to Switch off/on nand emu
-			else if (m_btnMgr.selected(m_mainBtnChannel) || m_btnMgr.selected(m_mainBtnUsb) || m_btnMgr.selected(m_mainBtnHomebrew))
+			else if (use_NAND && (m_btnMgr.selected(m_mainBtnChannel) || m_btnMgr.selected(m_mainBtnUsb) || m_btnMgr.selected(m_mainBtnHomebrew)))
 			{
 				int emu_mode = EMU_DISABLED;
 				m_cfg.getInt("NAND", "emulation", &emu_mode);
