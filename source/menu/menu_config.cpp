@@ -138,12 +138,19 @@ void CMenu::_showConfig(void)
 	m_btnMgr.show(m_locked ? m_configBtnUnlock : m_configBtnSetCode);
 }
 
+void CMenu::_cfNeedsUpdate(void)
+{
+	if (!m_cfNeedsUpdate)
+		m_cf.clear();
+	m_cfNeedsUpdate = true;
+}
+
 void CMenu::_config(int page)
 {
 	m_curGameId = m_cf.getId();
-	m_cf.clear();
-	int change = 0;		// 0=no change; 1=inc page; -1=dec page; 2=back out
-	while (1)
+	m_cfNeedsUpdate = false;
+	int change = CONFIG_PAGE_NO_CHANGE;
+	while (true)
 	{
 		switch (page)
 		{
@@ -166,10 +173,11 @@ void CMenu::_config(int page)
 				change = _configScreen();
 				break;
 		}
-		if (change == 2)
+		if (change == CONFIG_PAGE_BACK)
 			break;
 		if (!m_locked)
 		{
+			// assumes change is in the range of CONFIG_PAGE_DEC to CONFIG_PAGE_INC
 			page += change;
 			if (page > _nbCfgPages)
 				page = 1;
@@ -177,15 +185,18 @@ void CMenu::_config(int page)
 				page = _nbCfgPages;
 		}
 	}
+	if (m_cfNeedsUpdate)
+	{
 	m_cfg.save();
 	_initCF();
+	}
 }
 
 int CMenu::_configCommon(void)
 {
 	_mainLoopCommon();
 	if (BTN_HOME_PRESSED || BTN_B_PRESSED || (BTN_A_PRESSED && m_btnMgr.selected(m_configBtnBack)))
-		return 2;
+		return CONFIG_PAGE_BACK;
 	else if (BTN_UP_PRESSED)
 		m_btnMgr.up();
 	else if (BTN_DOWN_PRESSED)
@@ -193,19 +204,19 @@ int CMenu::_configCommon(void)
 	else if (BTN_LEFT_PRESSED || BTN_MINUS_PRESSED || (BTN_A_PRESSED && m_btnMgr.selected(m_configBtnPageM)))
 	{
 		if(BTN_LEFT_PRESSED || BTN_MINUS_PRESSED) m_btnMgr.click(m_configBtnPageM);
-		return -1;
+		return CONFIG_PAGE_DEC;
 	}
 	else if (BTN_RIGHT_PRESSED || BTN_PLUS_PRESSED || (BTN_A_PRESSED && m_btnMgr.selected(m_configBtnPageP)))
 	{
 		if(BTN_RIGHT_PRESSED || BTN_PLUS_PRESSED) m_btnMgr.click(m_configBtnPageP);
-		return 1;
+		return CONFIG_PAGE_INC;
 	}
-	return 0;
+	return CONFIG_PAGE_NO_CHANGE;
 }
 
 int CMenu::_config1(void)
 {
-	int change = 0;
+	int change = CONFIG_PAGE_NO_CHANGE;
 	SetupInput();
 
 	s32 bCurrentPartition = currentPartition;
@@ -216,41 +227,24 @@ int CMenu::_config1(void)
 	while (true)
 	{
 		change = _configCommon();
-		if (change != 0)
+		if (change != CONFIG_PAGE_NO_CHANGE)
 			break;
 		if (BTN_A_PRESSED)
 		{
 			if (m_btnMgr.selected(m_configBtnDownload))
 			{
+				_cfNeedsUpdate();
 				m_cf.stopCoverLoader(true);
 				_hideConfig();
 				_download();
 				_showConfig();
 				m_cf.startCoverLoader();
 			}
-			else if (m_btnMgr.selected(m_configBtnUnlock))
-			{
-				char code[4];
-				_hideConfig();
-				if (_code(code) && memcmp(code, m_cfg.getString("GENERAL", "parent_code").c_str(), 4) == 0)
-					m_locked = false;
-				else
-					error(_t("cfgg25",L"Password incorrect."));
-				_showConfig();
-			}
-			else if (m_btnMgr.selected(m_configBtnSetCode))
-			{
-				char code[4];
-				_hideConfig();
-				if (_code(code, true))
-				{
-					m_cfg.setString("GENERAL", "parent_code", string(code, 4).c_str());
-					m_locked = true;
-				}
-				_showConfig();
-			}
+			else if ((m_btnMgr.selected(m_configBtnUnlock)) || (m_btnMgr.selected(m_configBtnSetCode)))
+				_code();
 			else if (m_btnMgr.selected(m_configBtnPartitionP) || m_btnMgr.selected(m_configBtnPartitionM))
 			{
+				_cfNeedsUpdate();
 				SwitchPartition(m_btnMgr.selected(m_configBtnPartitionP));
 				_showConfig();
 			}

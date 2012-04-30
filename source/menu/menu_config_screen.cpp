@@ -62,14 +62,14 @@ void CMenu::_showConfigScreen(void)
 
 int CMenu::_configScreen(void)
 {
-	int change = 0;
+	int change = CONFIG_PAGE_NO_CHANGE;
 	SetupInput();
 
 	_showConfigScreen();
 	while (true)
 	{
 		change = _configCommon();
-		if (change != 0)
+		if (change != CONFIG_PAGE_NO_CHANGE)
 			break;
 		if (BTN_A_REPEAT)
 		{

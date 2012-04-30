@@ -428,10 +428,10 @@ void CMenu::_game(bool launch)
 				m_btnMgr.show(b ? m_gameBtnAdultOn : m_gameBtnAdultOff);
 				m_btnMgr.hide(b ? m_gameBtnAdultOff : m_gameBtnAdultOn);
 				m_btnMgr.show(m_gameBtnSettings);
-			}
 
-			if (m_current_view == COVERFLOW_USB && !m_locked)
+				if (m_current_view == COVERFLOW_USB)
 				m_btnMgr.show(m_gameBtnDelete);
+			}
 		}
 		else
 		{

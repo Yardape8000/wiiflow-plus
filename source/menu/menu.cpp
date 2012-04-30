@@ -50,6 +50,8 @@ extern const u8 pbarrights_png[];
 
 using namespace std;
 
+#define MAX_CATEGORIES	12
+
 CMenu::CMenu(CVideo &vid) :
 	m_vid(vid)
 {
@@ -365,7 +367,9 @@ void CMenu::init(string)
 	if (m_cfg.getBool("GENERAL", "favorites_on_startup"))
 		m_favorites = m_cfg.getBool(domain, "favorites");
 	m_category = m_cat.getInt(domain, "category");
-	m_max_categories = m_cat.getInt(domain, "numcategories", 12);
+	m_max_categories = m_cat.getInt(domain, "numcategories", MAX_CATEGORIES);
+	if (m_max_categories > MAX_CATEGORIES)
+		m_max_categories = MAX_CATEGORIES;
 
 	_buildMenus();
 

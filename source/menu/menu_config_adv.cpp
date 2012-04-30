@@ -93,7 +93,7 @@ static void listThemes(const char * path, vector<string> &themes)
 
 int CMenu::_configAdv(void)
 {
-	int change = 0;
+	int change = CONFIG_PAGE_NO_CHANGE;
 	vector<string> themes;
 	string prevTheme = m_cfg.getString("GENERAL", "theme");
 
@@ -111,7 +111,7 @@ int CMenu::_configAdv(void)
 	while (true)
 	{
 		change = _configCommon();
-		if (change != 0)
+		if (change != CONFIG_PAGE_NO_CHANGE)
 			break;
 		if (BTN_A_PRESSED)
 		{
@@ -123,6 +123,7 @@ int CMenu::_configAdv(void)
 			}
 			else if (m_btnMgr.selected(m_configAdvBtnCurThemeP) || m_btnMgr.selected(m_configAdvBtnCurThemeM))
 			{
+				_cfNeedsUpdate();
 				s8 direction = m_btnMgr.selected(m_configAdvBtnCurThemeP) ? 1 : -1;
 				curTheme = loopNum(curTheme + direction, (int)themes.size());
 				m_cfg.setString("GENERAL", "theme", themes[curTheme]);
@@ -130,6 +131,7 @@ int CMenu::_configAdv(void)
 			}
 			else if (m_btnMgr.selected(m_configAdvBtnCurLanguageP) || m_btnMgr.selected(m_configAdvBtnCurLanguageM))
 			{
+				_cfNeedsUpdate();
 				s8 direction = m_btnMgr.selected(m_configAdvBtnCurLanguageP) ? 1 : -1;
 				int lang = (int)loopNum((u32)m_cfg.getInt("GENERAL", "language", 0) + direction, ARRAY_SIZE(CMenu::_translations));
 				m_curLanguage = CMenu::_translations[lang];

@@ -526,6 +526,7 @@ class CMenu
 		volatile bool m_game_thread_complete;
 		bool m_gameSound_changed;
 		u8 m_bnrSndVol;
+		bool m_cfNeedsUpdate;
 
 		bool m_video_playing;
 
@@ -680,9 +681,17 @@ class CMenu
 		int _config4(void);
 		int _configAdv(void);
 		int _configSnd(void);
+		enum configPageChanges
+		{
+			CONFIG_PAGE_DEC = -1,
+			CONFIG_PAGE_NO_CHANGE = 0,
+			CONFIG_PAGE_INC = 1,
+			CONFIG_PAGE_BACK,
+		};
+		void _cfNeedsUpdate(void);
 		void _game(bool launch = false);
 		void _download(std::string gameId = std::string());
-		bool _code(char code[4], bool erase = false);
+		void _code(void);
 		void _about(void);
 		bool _wbfsOp(WBFS_OP op);
 		void _cfTheme(void);

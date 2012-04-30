@@ -97,13 +97,13 @@ void CMenu::_showConfig4(void)
 
 int CMenu::_config4(void)
 {
-	int change = 0;
+	int change = CONFIG_PAGE_NO_CHANGE;
 
 	_showConfig4();
 	while (true)
 	{
 		change = _configCommon();
-		if (change != 0)
+		if (change != CONFIG_PAGE_NO_CHANGE)
 			break;
 		if (BTN_A_PRESSED)
 		{

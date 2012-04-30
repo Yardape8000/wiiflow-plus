@@ -62,7 +62,7 @@ void CMenu::_showConfigSnd(void)
 
 int CMenu::_configSnd(void)
 {
-	int change = 0;
+	int change = CONFIG_PAGE_NO_CHANGE;
 	SetupInput();
 	int step = 1;
 
@@ -70,7 +70,7 @@ int CMenu::_configSnd(void)
 	while (true)
 	{
 		change = _configCommon();
-		if (change != 0)
+		if (change != CONFIG_PAGE_NO_CHANGE)
 			break;
 		if (BTN_A_REPEAT)
 		{

@@ -68,13 +68,13 @@ void CMenu::_showConfig3(void)
 
 int CMenu::_config3(void)
 {
-	int change = 0;
+	int change = CONFIG_PAGE_NO_CHANGE;
 
 	_showConfig3();
 	while (true)
 	{
 		change = _configCommon();
-		if (change != 0)
+		if (change != CONFIG_PAGE_NO_CHANGE)
 			break;
 		if (BTN_A_PRESSED)
 		{

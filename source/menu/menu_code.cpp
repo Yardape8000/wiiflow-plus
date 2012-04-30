@@ -28,8 +28,11 @@ void CMenu::_showCode(void)
 			m_btnMgr.show(m_codeLblUser[i]);
 }
 
-bool CMenu::_code(char code[4], bool erase)
+void CMenu::_code(void)
 {
+	char code[4];
+	_hideConfig();
+
 	u32 n = 0;
 	wchar_t codeLbl[] = L"_ _ _ _";
 
@@ -37,10 +40,11 @@ bool CMenu::_code(char code[4], bool erase)
 	memset(code, 0, sizeof code);
 	m_btnMgr.setText(m_codeLblTitle, codeLbl);
 	_showCode();
-	if (erase)
+	if (!m_locked)
 		m_btnMgr.show(m_codeBtnErase);
 	while (true)
 	{
+		int c = -1;
 		_mainLoopCommon();
 		if (BTN_HOME_PRESSED)
 		{
@@ -70,9 +74,7 @@ bool CMenu::_code(char code[4], bool erase)
 					for (int i = 0; i < 10; ++i)
 						if (m_btnMgr.selected(m_codeBtnKey[i]))
 						{
-							codeLbl[n * 2] = 'X';
-							code[n++] = '0' + i;
-							m_btnMgr.setText(m_codeLblTitle, codeLbl);
+							c = i;
 							break;
 						}
 			}
@@ -80,7 +82,7 @@ bool CMenu::_code(char code[4], bool erase)
 		else
 		{
 			// Map buttons to numbers
-			int c = -1;
+			c = -1;
 			if (BTN_UP_PRESSED) c = 0;
 			else if (BTN_LEFT_PRESSED) c = 1;
 			else if (BTN_RIGHT_PRESSED) c = 2;
@@ -91,19 +93,36 @@ bool CMenu::_code(char code[4], bool erase)
 			else if (BTN_B_PRESSED) c = 7;
 			else if (BTN_1_PRESSED) c = 8;
 			else if (BTN_2_PRESSED) c = 9;
-
-			if (c != -1)
-			{
-				codeLbl[n * 2] = 'X';
-				code[n++] = '0' + c;
-				m_btnMgr.setText(m_codeLblTitle, codeLbl);
-			}
+		}
+		if (c != -1)
+		{
+			codeLbl[n * 2] = 'X';
+			code[n++] = '0' + c;
+			m_btnMgr.setText(m_codeLblTitle, codeLbl);
 		}
 		if (n >= sizeof code)
+		{
+			if (m_locked)
+			{
+				if (memcmp(code, m_cfg.getString("GENERAL", "parent_code").c_str(), 4) == 0)
+				{
+					m_locked = false;
+					_cfNeedsUpdate();
+				}
+				else
+					error(_t("cfgg25", L"Password incorrect."));
+			}
+			else
+			{
+				m_cfg.setString("GENERAL", "parent_code", string(code, 4).c_str());
+				m_locked = true;
+				_cfNeedsUpdate();
+			}
 			break;
+		}
 	}
 	_hideCode();
-	return n == sizeof code;
+	_showConfig();
 }
 
 void CMenu::_initCodeMenu(CMenu::SThemeData &theme)
