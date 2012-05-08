@@ -117,6 +117,7 @@ int CMenu::_configAdv(void)
 		{
 			if (m_btnMgr.selected(m_configAdvBtnInstall))
 			{
+				_cfNeedsUpdate();
 				_hideConfigAdv();
 				_wbfsOp(CMenu::WO_ADD_GAME);
 				_showConfigAdv();

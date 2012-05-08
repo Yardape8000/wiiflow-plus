@@ -267,6 +267,12 @@ class CMenu
 		s8 _versionDownloader();
 		s8 _versionTxtDownloader();
 	//Game menu
+		enum
+		{
+			LOAD_IOS_FAILED = 0,
+			LOAD_IOS_SUCCEEDED,
+			LOAD_IOS_NOT_NEEDED
+		};
 		u32 m_gameBtnFavoriteOn;
 		u32 m_gameBtnFavoriteOff;
 		u32 m_gameBtnAdultOn;
@@ -712,6 +718,7 @@ class CMenu
 		void _directlaunch(const std::string &id);
 	private:
 		bool _loadFile(SmartBuf &buffer, u32 &size, const char *path, const char *file);
+		int _loadIOS(u8 ios, string id);
 		void _launch(dir_discHdr *hdr);
 		void _launchGame(dir_discHdr *hdr, bool dvd);
 		void _launchChannel(dir_discHdr *hdr);
