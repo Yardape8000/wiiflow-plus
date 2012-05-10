@@ -254,7 +254,7 @@ s32 CMenu::_networkComplete(s32 ok, void *usrData)
 	{
 		// Get ip
 		std::string ip = m->m_cfg.getString("DEBUG", "wifi_gecko_ip");
-		u16 port = m->m_cfg.getInt("DEBUG", "wifi_gecko_port");
+		u16 port = m->m_cfg.getInt("DEBUG", "wifi_gecko_port", 4405);
 
 		if(ip.size() > 0 && port != 0)
 			WifiGecko_Init(ip.c_str(), port);
@@ -265,7 +265,7 @@ s32 CMenu::_networkComplete(s32 ok, void *usrData)
 
 int CMenu::_initNetwork()
 {
-	while(net_get_status() == -EBUSY || m_thrdNetwork) {}; // Async initialization may be busy, wait to see ifit succeeds.
+	while(net_get_status() == -EBUSY || m_thrdNetwork) {}; // Async initialization may be busy, wait to see if it succeeds.
 	if(m_networkInit) return 0;
 	if(!_isNetworkAvailable()) return -2;
 
