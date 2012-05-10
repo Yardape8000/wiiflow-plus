@@ -10,6 +10,8 @@
 #include <dirent.h>
 #include <time.h>
 #include <wchar.h>
+#include <network.h>
+#include <errno.h>
 
 #include "gecko.h"
 #include "defines.h"
@@ -159,9 +161,15 @@ void CMenu::init(string)
 		remove(gecko_logfile);
 #endif /* FILE_GECKO */
 
+	m_cfg.load(sfmt("%s/" CFG_FILENAME, m_appDir.c_str()).c_str());
+	if (m_cfg.getBool("GENERAL", "async_network") || has_enabled_providers() || m_cfg.getBool("DEBUG", "wifi_gecko"))
+	{
+		_initAsyncNetwork();
+		while(net_get_status() == -EBUSY);
+	}
+
 	gprintf("Wiiflow boot.dol Location: %s\n", m_appDir.c_str());
 
-	m_cfg.load(sfmt("%s/" CFG_FILENAME, m_appDir.c_str()).c_str());
 	u8 dsi_timeout = m_cfg.getInt("DEBUG", "dsi_timeout");
 	__exception_setreload(dsi_timeout > 5 ? dsi_timeout : 5);
 

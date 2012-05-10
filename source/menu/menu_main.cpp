@@ -147,9 +147,6 @@ int CMenu::main(void)
 	static u32 disc_check = 0;
 	int done = 0;
 
-	if (m_cfg.getBool("GENERAL", "async_network") || has_enabled_providers() || m_cfg.getBool("DEBUG", "wifi_gecko"))
-		_initAsyncNetwork();
-
 	SetupInput();
 	MusicPlayer::Instance()->Play();
 	_loadList();
