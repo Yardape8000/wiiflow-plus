@@ -141,7 +141,7 @@ void CMenu::_textAbout(void)
 	}
 	SAFE_CLOSE(f);
 
-	wstringEx help_text(wfmt(_fmt("help", L"Controls:\n%s"), help));
+	wstringEx help_text(help);
 
 	wstringEx developers(wfmt(_fmt("about6", L"Current Developers:\n%s"), DEVELOPERS));
 	wstringEx pDevelopers(wfmt(_fmt("about7", L"Past Developers:\n%s"), PAST_DEVELOPERS));

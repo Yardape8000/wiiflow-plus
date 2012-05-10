@@ -1,3 +1,4 @@
+Controls:
 - Main menu (coverflow) :
 -- Up / Down  =  Previous / next game (vertical)
 -- Left / Right  =  Previous / next game (horizontal)

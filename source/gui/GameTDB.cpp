@@ -750,6 +750,7 @@ bool GameTDB::GetRatingValue(const char * id, string & rating_value)
 
 int GameTDB::GetRatingDescriptors(const char * id, vector<string> & desc_list)
 {
+	desc_list.clear();
 	if(!id)
 		return -1;
 
@@ -765,7 +766,6 @@ int GameTDB::GetRatingDescriptors(const char * id, vector<string> & desc_list)
 	}
 
 	unsigned int list_num = 0;
-	desc_list.clear();
 
 	while(*descriptor_text != '\0')
 	{
@@ -817,6 +817,7 @@ int GameTDB::GetWifiPlayers(const char * id)
 
 int GameTDB::GetWifiFeatures(const char * id, vector<string> & feat_list)
 {
+	feat_list.clear();
 	if(!id)
 		return -1;
 
@@ -832,7 +833,6 @@ int GameTDB::GetWifiFeatures(const char * id, vector<string> & feat_list)
 	}
 
 	unsigned int list_num = 0;
-	feat_list.clear();
 
 	while(*feature_text != '\0')
 	{
@@ -889,6 +889,7 @@ int GameTDB::GetPlayers(const char * id)
 
 int GameTDB::GetAccessories(const char * id, vector<Accessory> & acc_list)
 {
+	acc_list.clear();
 	if(!id)
 		return -1;
 
@@ -904,7 +905,6 @@ int GameTDB::GetAccessories(const char * id, vector<Accessory> & acc_list)
 	}
 
 	unsigned int list_num = 0;
-	acc_list.clear();
 
 	while(ControlsNode && *ControlsNode != '\0')
 	{

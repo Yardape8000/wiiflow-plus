@@ -336,6 +336,7 @@ void CMenu::_textGameInfo(void)
 		}
 
 		//Ratings
+		m_rating.fromPNG(norating_png);
 		switch(gameinfo.RatingType)
 		{
 			case 0:
@@ -350,8 +351,6 @@ void CMenu::_textGameInfo(void)
 					m_rating.fromPNG(cero_c_png);
 				else if (gameinfo.RatingValue == "Z")
 					m_rating.fromPNG(cero_z_png);
-				else
-					m_rating.fromPNG(norating_png);
 				break;
 			case 1:
 				//ESRB
@@ -367,8 +366,6 @@ void CMenu::_textGameInfo(void)
 					m_rating.fromPNG(esrb_t_png);
 				else if (gameinfo.RatingValue == "M")
 					m_rating.fromPNG(esrb_m_png);
-				else
-					m_rating.fromPNG(norating_png);
 				break;
 			case 2:
 				//PEGI
@@ -382,8 +379,6 @@ void CMenu::_textGameInfo(void)
 					m_rating.fromPNG(pegi_16_png);
 				else if (gameinfo.RatingValue == "18")
 					m_rating.fromPNG(pegi_18_png);
-				else
-					m_rating.fromPNG(norating_png);
 				break;
 			default:
 				break;
@@ -430,7 +425,7 @@ void CMenu::_textGameInfo(void)
 			udraw = 0,
 			x = 0;
 
-		//check required controlls
+		//check required controls
 		for (vector<Accessory>::iterator acc_itr = gameinfo.Accessories.begin(); acc_itr != gameinfo.Accessories.end(); acc_itr++)
 		{
 			if (!acc_itr->Required) continue;
@@ -539,7 +534,7 @@ void CMenu::_textGameInfo(void)
 		//for(unsigned int i = 0;i<ARRAY_SIZE(m_gameinfoLblControlsReq);i++)
 			//m_btnMgr.setTexture(m_gameinfoLblControlsReq[i] ,m_controlsreq[i]);
 
-		//check optional controlls
+		//check optional controls
 		wiimote=0,
 		nunchuk=0,
 		classiccontroller = 0,
