@@ -17,6 +17,9 @@
 #include "wip.h"
 #include "channel_launcher.h"
 
+#include <network.h>
+#include <errno.h>
+
 #include "loader/frag.h"
 #include "loader/fst.h"
 
@@ -293,7 +296,7 @@ void CMenu::_game(bool launch)
 						Playlog_Delete();
 				}
 
-				gprintf("Launching game\n");
+				gprintf("Launching game %s\n", id.c_str());
 				_launch(hdr);
 
 				if(m_exit || bootHB) break;
@@ -531,6 +534,8 @@ int CMenu::_loadIOS(u8 ios, string id)
 	int gameIOS = 0;
 	int userIOS = 0;
 
+	gprintf("Game ID# %s requested IOS %d\n", id.c_str(), ios);
+
 	if (m_gcfg2.getInt(id, "ios", &userIOS) && _installed_cios.size() > 0)
 	{
 		for(CIOSItr itr = _installed_cios.begin(); itr != _installed_cios.end(); itr++)
@@ -727,7 +732,8 @@ void CMenu::_launchGame(dir_discHdr *hdr, bool dvd)
 {
 	string id = string(hdr->id);
 	Nand::Instance()->Disable_Emu();
-
+	bool using_wifi_gecko = m_cfg.getBool("DEBUG", "wifi_gecko");
+	
 	bool gc = false;
 	if (dvd)
 	{
@@ -838,7 +844,8 @@ void CMenu::_launchGame(dir_discHdr *hdr, bool dvd)
 	app_gameconfig_load(hdr->id, gameconfig.get(), gameconfigSize);
 	ocarina_load_code(hdr->id, cheatFile.get(), cheatSize);
 
-	net_wc24cleanup();
+	if (!using_wifi_gecko)
+		net_wc24cleanup();
 
 	if (!dvd)
 	{
@@ -847,6 +854,12 @@ void CMenu::_launchGame(dir_discHdr *hdr, bool dvd)
 			return;
 		if (result == LOAD_IOS_SUCCEEDED)
 			iosLoaded = true;
+	}
+
+	if (iosLoaded && using_wifi_gecko)
+	{
+		_initAsyncNetwork();
+		while(net_get_status() == -EBUSY);
 	}
 
 	if(emu_mode)
@@ -911,7 +924,9 @@ void CMenu::_launchGame(dir_discHdr *hdr, bool dvd)
 		}
 	}
 
+	while(net_get_status() == -EBUSY);
 	cleanup();
+	// wifi-gecko can no longer function after cleanup
 	Close_Inputs();
 	USBStorage_Deinit();
 	if (gc)
