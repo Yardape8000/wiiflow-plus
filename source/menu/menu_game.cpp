@@ -258,7 +258,7 @@ static void setLanguage(int l)
 
 void CMenu::_game(bool launch)
 {
-	m_gcfg1.load(sfmt("%s/gameconfig1.ini", m_settingsDir.c_str()).c_str());
+	m_gcfg1.load(fmt("%s/" GAME_SETTINGS1_FILENAME, m_settingsDir.c_str()));
 
 	if (!launch) SetupInput();
 	m_moved = false;
@@ -485,7 +485,7 @@ void CMenu::_directlaunch(const string &id)
 
 void CMenu::_launch(dir_discHdr *hdr)
 {
-	m_gcfg2.load(sfmt("%s/gameconfig2.ini", m_settingsDir.c_str()).c_str());
+	m_gcfg2.load(fmt("%s/" GAME_SETTINGS2_FILENAME, m_settingsDir.c_str()));
 	switch(m_current_view)
 	{
 		case COVERFLOW_HOMEBREW:

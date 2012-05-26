@@ -10,10 +10,12 @@ void CMenu::_hideCode(bool instant)
 		m_btnMgr.hide(m_codeBtnKey[i], instant);
 	m_btnMgr.hide(m_codeBtnBack, instant);
 	m_btnMgr.hide(m_codeBtnErase, instant);
+	m_btnMgr.hide(m_codeBtnAge, instant);
 	m_btnMgr.hide(m_codeLblTitle, instant);
 	for (u32 i = 0; i < ARRAY_SIZE(m_codeLblUser); ++i)
 		if (m_codeLblUser[i] != -1u)
 			m_btnMgr.hide(m_codeLblUser[i], instant);
+	m_btnMgr.hide(m_codeLblAge, true);
 }
 
 void CMenu::_showCode(void)
@@ -26,6 +28,7 @@ void CMenu::_showCode(void)
 	for (u32 i = 0; i < ARRAY_SIZE(m_codeLblUser); ++i)
 		if (m_codeLblUser[i] != -1u)
 			m_btnMgr.show(m_codeLblUser[i]);
+	m_btnMgr.hide(m_codeLblAge, true);
 }
 
 void CMenu::_code(void)
@@ -40,36 +43,47 @@ void CMenu::_code(void)
 	memset(code, 0, sizeof code);
 	m_btnMgr.setText(m_codeLblTitle, codeLbl);
 	_showCode();
+	bool ageLockMode = false;
+	bool modeChanged = false;
+	bool goBack = false;
 	if (!m_locked)
+	{
+		m_btnMgr.show(m_codeBtnAge);
 		m_btnMgr.show(m_codeBtnErase);
+	}
 	while (true)
 	{
 		int c = -1;
 		_mainLoopCommon();
 		if (BTN_HOME_PRESSED)
-		{
-			break;
-		}
-		else if (WPadIR_ANY())
+			goBack = true;
+
+		if (WPadIR_ANY())
 		{
 			if (BTN_B_PRESSED)
-				break;
+				goBack = true;
 			else if (BTN_UP_PRESSED)
 				m_btnMgr.up();
 			else if (BTN_DOWN_PRESSED)
 				m_btnMgr.down();
-			if (BTN_A_PRESSED)
+			else if (BTN_A_PRESSED)
 			{
-				if (!m_locked && m_btnMgr.selected(m_codeBtnErase))
-				{
-					memset(code, 0, sizeof code);
-					m_cfg.remove("GENERAL", "parent_code");
-					n = 0;
-					m_locked = false;
-					break;
-				}
 				if (m_btnMgr.selected(m_codeBtnBack))
-					break;
+					goBack = true;
+				else if (m_btnMgr.selected(m_codeBtnErase))
+				{
+					goBack = true;
+					_cfNeedsUpdate();
+					if (ageLockMode)
+						m_cfg.remove("GENERAL", "age_lock");
+					else
+					{
+						m_cfg.remove("GENERAL", "parent_code");
+						m_locked = false;
+					}
+				}
+				else if (m_btnMgr.selected(m_codeBtnAge))
+					modeChanged = true;
 				else
 					for (int i = 0; i < 10; ++i)
 						if (m_btnMgr.selected(m_codeBtnKey[i]))
@@ -79,7 +93,7 @@ void CMenu::_code(void)
 						}
 			}
 		}
-		else
+		else if (!ageLockMode)
 		{
 			// Map buttons to numbers
 			c = -1;
@@ -94,31 +108,85 @@ void CMenu::_code(void)
 			else if (BTN_1_PRESSED) c = 8;
 			else if (BTN_2_PRESSED) c = 9;
 		}
-		if (c != -1)
+
+		if  (goBack)
 		{
-			codeLbl[n * 2] = 'X';
+			if (!ageLockMode)
+				break;
+			modeChanged = true;
+			goBack = false;
+		}
+		// ageLockMode allows entry of numbers 2 - 19
+		// a first digit of 0 is ignored
+		// a first digit of 2 - 9 is taken to mean a single digit number
+		// a first digit of 1 will be the start of a 2 digit number
+		else if (c != -1 && !(ageLockMode && (n == 0 && c == 0)))
+		{
+			codeLbl[n * 2] = ageLockMode ? '0' + c : 'X';
 			code[n++] = '0' + c;
 			m_btnMgr.setText(m_codeLblTitle, codeLbl);
 		}
-		if (n >= sizeof code)
+		
+		if (modeChanged)
 		{
-			if (m_locked)
+			modeChanged = false;
+			memset(code, 0, sizeof code);
+			n = 0;
+			ageLockMode = !ageLockMode;
+			
+			if (ageLockMode)
 			{
-				if (memcmp(code, m_cfg.getString("GENERAL", "parent_code").c_str(), 4) == 0)
+				int ageLockM = m_cfg.getInt("GENERAL", "age_lock");
+				if (ageLockM < 2 || ageLockM > 19)
+					ageLockM = 19;
+				m_btnMgr.hide(m_codeBtnAge, true);
+				wchar_t ageLbl[40];
+				wcsncpy(ageLbl, (_t("cd3", L"Age Lock")).c_str(), 35);
+				ageLbl[35] = 0;
+				swprintf(ageLbl, 40, L"%ls: %d", ageLbl, ageLockM);
+				m_btnMgr.setText(m_codeLblAge, ageLbl);
+				m_btnMgr.show(m_codeLblAge);
+			}
+			else if (!m_locked)
+			{
+				m_btnMgr.show(m_codeBtnAge);
+				m_btnMgr.hide(m_codeLblAge, true);
+			}
+
+			for (u32 i = 0; i < sizeof code; i++)
+				codeLbl[i*2] = (ageLockMode && i > 1) ? ' ' : '_';
+			m_btnMgr.setText(m_codeLblTitle, codeLbl);
+		}
+		else
+		{
+			if (ageLockMode)
+			{
+				if ((n >= 2) || (n == 1 && c > 1))
 				{
-					m_locked = false;
-					_cfNeedsUpdate();
+					modeChanged = true;
+					m_cfg.setString("GENERAL", "age_lock", string(code, 2).c_str());
+					_cfNeedsUpdate();				}
+			}
+			else if (n >= sizeof code)
+			{
+				if (m_locked)
+				{
+					if (memcmp(code, m_cfg.getString("GENERAL", "parent_code").c_str(), 4) == 0)
+					{
+						m_locked = false;
+						_cfNeedsUpdate();
+					}
+					else
+						error(_t("cfgg25", L"Password incorrect."));
 				}
 				else
-					error(_t("cfgg25", L"Password incorrect."));
+				{
+					m_cfg.setString("GENERAL", "parent_code", string(code, 4).c_str());
+					m_locked = true;
+					_cfNeedsUpdate();
+				}
+				break;
 			}
-			else
-			{
-				m_cfg.setString("GENERAL", "parent_code", string(code, 4).c_str());
-				m_locked = true;
-				_cfNeedsUpdate();
-			}
-			break;
 		}
 	}
 	_hideCode();
@@ -130,23 +198,35 @@ void CMenu::_initCodeMenu(CMenu::SThemeData &theme)
 	_addUserLabels(theme, m_codeLblUser, ARRAY_SIZE(m_codeLblUser), "CODE");
 	m_codeBg = _texture(theme.texSet, "CODE/BG", "texture", theme.bg);
 	m_codeLblTitle = _addTitle(theme, "CODE/CODE", 20, 30, 600, 60, FTGX_JUSTIFY_CENTER | FTGX_ALIGN_MIDDLE, L"_ _ _ _");
-	m_codeBtnKey[9] = _addButton(theme, "CODE/9_BTN", 380, 100, 100, 50, L"9");
-	m_codeBtnKey[8] = _addButton(theme, "CODE/8_BTN", 270, 100, 100, 50, L"8");
-	m_codeBtnKey[7] = _addButton(theme, "CODE/7_BTN", 160, 100, 100, 50, L"7");
-	m_codeBtnKey[6] = _addButton(theme, "CODE/6_BTN", 380, 180, 100, 50, L"6");
-	m_codeBtnKey[5] = _addButton(theme, "CODE/5_BTN", 270, 180, 100, 50, L"5");
-	m_codeBtnKey[4] = _addButton(theme, "CODE/4_BTN", 160, 180, 100, 50, L"4");
-	m_codeBtnKey[3] = _addButton(theme, "CODE/3_BTN", 380, 260, 100, 50, L"3");
-	m_codeBtnKey[2] = _addButton(theme, "CODE/2_BTN", 270, 260, 100, 50, L"2");
-	m_codeBtnKey[1] = _addButton(theme, "CODE/1_BTN", 160, 260, 100, 50, L"1");
 	m_codeBtnKey[0] = _addButton(theme, "CODE/0_BTN", 270, 340, 210, 50, L"0");
 	m_codeBtnErase = _addButton(theme, "CODE/ERASE_BTN", 20, 410, 200, 56);
 	m_codeBtnBack = _addButton(theme, "CODE/BACK_BTN", 420, 410, 200, 56);
 	//
 	for (int i = 0; i < 10; ++i)
 		_setHideAnim(m_codeBtnKey[i], sfmt("CODE/%i_BTN", i).c_str(), 0, 0, 0.f, 0.f);
+
+	m_codeBtnAge = _addButton(theme, "CODE/AGE_BTN", 20, 340, 200, 56, L"");
+	m_codeLblAge = _addTitle(theme, "CODE/AGE", 20, 340, 200, 40, FTGX_JUSTIFY_CENTER | FTGX_ALIGN_MIDDLE, L"");
+
+	for (int i = 0; i < 10; ++i)
+	{
+		const char *codeText = fmt("CODE/%i_BTN", i);
+		int x, y;
+		if (i > 0)
+		{
+			int x = i - 1;
+			int y = x / 3;
+			x %= 3;
+			x = 160 + x * 110;
+			y = 260 - y * 80;
+			m_codeBtnKey[i] = _addButton(theme, codeText, x, y, 100, 50, wfmt(L"%i", i));
+		}
+		_setHideAnim(m_codeBtnKey[i], codeText, 0, 0, 0.f, 0.f);
+	}
+
 	_setHideAnim(m_codeBtnErase, "CODE/ERASE_BTN", 0, 0, 1.f, 0.f);
 	_setHideAnim(m_codeBtnBack, "CODE/BACK_BTN", 0, 0, 1.f, 0.f);
+	_setHideAnim(m_codeBtnAge, "CODE/AGE_BTN", 0, 0, 1.f, 0.f);
 	//
 	_hideCode(true);
 	_textCode();
@@ -156,5 +236,5 @@ void CMenu::_textCode(void)
 {
 	m_btnMgr.setText(m_codeBtnBack, _t("cd1", L"Back"));
 	m_btnMgr.setText(m_codeBtnErase, _t("cd2", L"Erase"));
-	m_btnMgr.setText(m_codeLblTitle, L"_ _ _ _");
+	m_btnMgr.setText(m_codeBtnAge, _t("cd3", L"Age Lock"));
 }

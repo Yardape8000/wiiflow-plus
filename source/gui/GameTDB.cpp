@@ -677,12 +677,14 @@ const char * GameTDB::RatingToString(int rating)
 {
 	switch(rating)
 	{
-		case 0:
-			return "CERO";
-		case 1:
-			return "ESRB";
-		case 2:
-			return "PEGI";
+        case GAMETDB_RATING_TYPE_CERO:
+            return "CERO";
+        case GAMETDB_RATING_TYPE_ESRB:
+            return "ESRB";
+        case GAMETDB_RATING_TYPE_PEGI:
+            return "PEGI";
+        case GAMETDB_RATING_TYPE_GRB:
+            return "GRB";
 		default:
 			break;
 	}
@@ -706,14 +708,17 @@ int GameTDB::GetRating(const char * id)
 		return rating;
 	}
 
-	if(strncmp(rating_text, "CERO", 4) == 0)
-		rating = 0;
+    if(strncmp(rating_text, "CERO", 4) == 0)
+        rating = GAMETDB_RATING_TYPE_CERO;
 
-	else if(strncmp(rating_text, "ESRB", 4) == 0)
-		rating = 1;
+    else if(strncmp(rating_text, "ESRB", 4) == 0)
+        rating = GAMETDB_RATING_TYPE_ESRB;
 
-	else if(strncmp(rating_text, "PEGI", 4) == 0)
-		rating = 2;
+    else if(strncmp(rating_text, "PEGI", 4) == 0)
+        rating = GAMETDB_RATING_TYPE_PEGI;
+
+    else if(strncmp(rating_text, "GRB", 4) == 0)
+        rating = GAMETDB_RATING_TYPE_GRB;
 
 	delete [] data;
 
